@@ -10,10 +10,10 @@ import { setAccessToken } from '../../store/auth-slice';
 const { Title } = Typography;
 
 const validationSchema = Yup.object({
-  username: Yup.string().required('Хэрэглэгчийн нэр шаардлагатай'),
+  username: Yup.string().required('user name required'),
   password: Yup.string()
-    .min(3, 'Нууц үг хамгийн багадаа 3 тэмдэгт байх ёстой')
-    .required('Нууц үг шаардлагатай'),
+    .min(3, 'user name must be at least 3 characters')
+    .required('password required'),
 });
 
 const LoginForm = () => {

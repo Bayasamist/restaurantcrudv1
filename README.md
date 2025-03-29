@@ -1,68 +1,147 @@
-# **Assignment: Full-Stack CRUD Application Development with DevOps Practices**
+                    Restaurant CRUD Application
+Project Overview
+This is a full-stack CRUD application built using Node.js, Express, React.js, and MongoDB. It follows best practices for development and includes DevOps practices like Continuous Integration (CI) and Continuous Deployment (CD). The app features user authentication with JWT (JSON Web Tokens) and automatic testing and deployment to AWS EC2.
 
-## **Objective**
+Technologies Used
+  -Backend: Node.js, Express, MongoDB
 
-You have been provided with a starter project that includes user authentication using  **Node.js, React.js, and MongoDB**. Your task is to extend this application by implementing **CRUD (Create, Read, Update, Delete) operations** for a real-world application of your choice, while following industry best practices such as:
+  -Frontend: React.js
 
-* **Project Management with JIRA**
-* **Requirement Diagram using SysML**
-* **Version Control using GitHub**
-* **CI/CD Integration for Automated Deployment**
+  -Authentication: JWT (JSON Web Tokens)
 
-## **Requirements**
+  -Version Control: GitHub
 
-### **1. Choose a Real-World Application**
+  -CI/CD: GitHub Actions, AWS EC2
 
-Select a meaningful use case for your CRUD operations. We will provide the list, you have to select it.
 
-### **2. Project Management with JIRA and SysML**
 
-* Create a **JIRA project** and define:
-  * **Epic**
-  * **User Stories** (features required in your app)
-  * **Child issues & Subtasks** (breaking down development work)
-  * **Sprint Planning** (organizing work into milestones)
-* Document your JIRA **board URL** in the project README.
-* Draw a requirements diagram
+JIRA Project Board
+JIRA Project Board URL:(https://connectqutedu-my.sharepoint.com/:f:/g/personal/n11824573_qut_edu_au/EjKkAYzR00NBiyFo7R4j0UYB71p9HE_5hqmC6wt6ZbFN-A?e=Pg5tKm) 
 
-### **3. Backend Development (Node.js + Express + MongoDB)**
+Epics: High-level goals like "User Authentication," "CRUD Operations," and "UI/UX Improvements."
 
-* Create a user-friendly interface to interact with your API (Some portion developed, follow task manager app)).
-* Implement **forms** for adding and updating records.
-* Display data using  **tables, cards, or lists (Follow how we showed data in task manager app)**
+User Stories: Each feature or user requirement is broken down into user stories.
 
-### **4. Frontend Development (React.js)**
+Child Issues/Subtasks: Tasks that break down user stories into smaller steps.
 
-* Create a user-friendly interface to interact with your API (**Some portion developed, follow task manager app)**.
-* Implement **forms** for adding, showing, deleting and updating records (CRUD).
-* Display data using  **tables, cards, or lists (Follow how we showed data in task manager app)**
+Sprints: Tasks organized into development cycles for progress tracking.
 
-### **5. Authentication & Authorization**
+SysML Requirement Diagram
+Diagram URL: https://connectqutedu-my.sharepoint.com/:f:/g/personal/n11824573_qut_edu_au/EjKkAYzR00NBiyFo7R4j0UYB71p9HE_5hqmC6wt6ZbFN-A?e=Pg5tKm
 
-* Ensure **only authenticated users** can access and perform CRUD operations. (Already developed in your project)
-* Use **JWT (JSON Web Tokens)** for user authentication (Use the task manager one from .env file).
+The SysML diagram shows how different parts of the application (backend, frontend, and database) interact and meet the system's requirements.
 
-### **6. GitHub Version Control & Branching Strategy**
+GitHub Repository
+Backend GitHub Repo: (https://github.com/Bayasamist/restaurantcrudv1.git)
 
-* Use **GitHub for version control** and maintain:
-  * `main` branch (stable production-ready code)
-  * Feature branches (`feature/xyz`) for each new functionality
-* Follow proper **commit messages** and  **pull request (PR) reviews** .
+Frontend GitHub Repo: https://github.com/Bayasamist/restaurantcrudv1.git
 
-### **7. CI/CD Pipeline Setup**
+Project Setup Instructions
+Backend Setup
+Clone the Repository:
 
-* Implement a **CI/CD pipeline using GitHub Actions** to:
-  * Automatically **run tests** on every commit/pull request (Optional).
-  * Deploy the **backend** to **AWS** .
-  * Deploy the **frontend** to **AWS**.
-* Document your  **CI/CD workflow in the README** .
+bash
 
-## **Submission Requirements**
+git clone https://github.com/Bayasamist/restaurantcrudv1.git
+  cd backend
+    -Install Dependencies: npm install
 
-* **JIRA Project Board URL** (user stories ).
-* **Requirment diagram** (Using project features)
-* **GitHub Repository** (`backend/` and `frontend/`).
-* **README.md** with:
+  cd frontend 
+    -npm install
 
-  * Project setup instructions.
-  * CI/CD pipeline details.
+
+
+.env
+
+MONGO_URI=mongodb+srv://Bayasa:Bemg03171401@cluster0.y808g.mongodb.net/restaurantcrudv1?retryWrites=true&w=majority&appName=Cluster0
+PORT=5001
+JWT_SECRET=2J8zqkP7VN6bxzg+Wy7DQZsd3Yx8mF3Bl0kch6HYtFs=`
+
+
+bash
+
+npm start
+The backend should now be running at http://localhost:5001.
+
+Frontend Setup
+Clone the Repository:
+
+bash
+  -cd backend
+    -node index
+  -cd frontend
+    -npm start
+The frontend should now be running at http://localhost:3000. / 3.27.156.209    
+
+CI/CD Pipeline Details
+The CI/CD pipeline is set up using GitHub Actions to automate our deployment process. Below is an overview of how it's configured:
+
+CI/CD Workflow:
+GitHub Actions Workflow File: The workflow file is located in .github/workflows/ci.yml.
+
+CI Pipeline:
+
+Every time a commit or pull request is made, tests are run automatically.
+
+Example of the workflow configuration:
+
+yaml
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+    - run: npm install
+    - run: npm run lint
+    - run: npm test
+CD Pipeline (Deployment):
+
+Once CI passes, the backend is deployed to AWS EC2 using Docker and AWS ECS.
+
+The frontend is deployed to AWS S3 with CloudFront for content delivery.
+
+Authentication & Authorization
+JWT Authentication: This app uses JWT tokens to authenticate users and control access to different parts of the app.
+
+Protected Routes: Only authenticated users can access certain routes, ensuring secure data handling.
+
+Project Workflow
+User Authentication: Users can sign up and log in, with the app using JWT to keep them authenticated.
+
+  Create Operations: Users can add new order, add new menu, 
+
+  Read Operations: Users can view data, such as orders, in tables, and lists.
+
+  Update Operations: Users can update order, menu and table
+
+  Delete Operations: Users can remove order, menu items, tables.
+
+
+Frontend & Backend Integration: The frontend interacts with the backend using API calls to perform all CRUD actions.
+
+Challenges & Problem-Solving
+Handling 400/500 Errors: I ensured that both the frontend and backend handle errors gracefully, showing the user clear messages when something goes wrong.
+
+Ensuring Data Integrity: The backend validates all incoming data to prevent issues with inconsistent or incorrect records.
+
+CI/CD Setup: Setting up the CI/CD pipeline for automated deployments to AWS took some time, but now updates are seamlessly deployed.
+
+Conclusion
+This project demonstrates how to build a full-stack CRUD application with proper authentication and authorization, following best practices in DevOps. The CI/CD pipeline ensures that every update is tested and deployed automatically, helping maintain a smooth development and deployment process.
+

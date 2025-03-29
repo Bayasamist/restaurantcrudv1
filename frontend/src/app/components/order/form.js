@@ -71,11 +71,9 @@ const OrderForm = ({ onCancel, action }) => {
     try {
       const orderData = {
         table: values.table,
-        items: [{
-          name: values.food,
-          quantity: values.quantity,
-          specialRequests: values.notes || ''
-        }]
+        menu: values.food,  
+        quantity: values.quantity,
+        specialRequests: values.notes || ''
       };
   
       await OrderApi.create(orderData);

@@ -6,14 +6,20 @@ const router = express.Router();
 // POST /api/orders - Create order
 router.post('/create', authenticateToken, async (req, res) => {
   try {
- 
-    const newOrder = new Order(req.body);
+    const { table, food, orderedBy } = req.body;  
+    const newOrder = new Order({
+      table,
+      menu: food,  // Ensure correct field name
+      orderedBy
+    });
+
     await newOrder.save();
     res.status(201).json(newOrder);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 
 

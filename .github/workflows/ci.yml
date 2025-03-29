@@ -1,33 +1,51 @@
-name: Backend CI
+name: Backend CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
+  # CI Job: Testing the Backend
   test:
-    runs-on: self-hosted
-    strategy:
-      matrix:
-        node-version: [22]
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '14'  # Or your required Node version
 
-      - name: Install Dependencies
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests (if you have them set up)
+        run: npm test  # This runs npm test if you have a test script
+
+  # CD Job: Deploy to EC2
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.AWS_PRIVATE_KEY }}
+
+      - name: Deploy to EC2
         run: |
-          npm install
-          yarn install
-
-    
-
-      - name: Deploy to Production
-        run: |
-          pm2 stop all
-          pm2 start all
+          ssh -o StrictHostKeyChecking=no -i ${{ secrets.AWS_PRIVATE_KEY }} ubuntu@${{ secrets.EC2_PUBLIC_IP }} "
+          cd /path/to/your/project &&
+          git pull origin main &&
+          npm install &&
+          pm2 stop all &&
+          pm2 start app.js  # Replace app.js with your entry point
+          pm2 save"

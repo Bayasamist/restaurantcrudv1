@@ -1,0 +1,22 @@
+body {
+    display: block;
+    margin: 0px !important;
+}
+
+.table-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding-left: 20px;
+    padding-right: 50;
+}
+
+.w10 {
+    width: 10px;
+}
+
+.modal-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+}

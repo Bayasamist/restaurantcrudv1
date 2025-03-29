@@ -7,8 +7,6 @@ import "./dashboard.css";
 import { Header } from "antd/es/layout/layout";
 import { LogoutOutlined } from "@ant-design/icons";
 
-const { Title } = Typography;
-
 const DashboardScreen = memo(() => {
   const dispatch = useDispatch();
   const navigate = useNavigate();

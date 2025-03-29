@@ -2,50 +2,77 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
-  AWS_REGION: "ap-southeast-2  # Change to your AWS region
+  AWS_REGION: "ap-southeast-2"
+  MONGO_DB_NAME: "restaurantcrudv1"
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Node.js  # Change to Java/Python/etc. as needed
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
 
-    - name: Install dependencies
-      run: npm install  # Or pip install, mvn install, etc.
+      - name: Install dependencies
+        run: npm install
 
-    - name: Run tests
-      run: npm test  # Replace with your test command
+      - name: Run tests
+        run: npm test
+
+      - name: Build application
+        run: npm run build
 
   deploy:
-    needs: test  # Only run if tests pass
-    runs-on: ubuntu-latest
+    needs: test
+    runs-on: self-hosted
+    strategy:
+      matrix:
+        node-version: [22]
+    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
 
-    - name: Build application  # Customize for your stack
-      run: npm run build  # Or ./gradlew build, etc.
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-    - name: Deploy to AWS
-      run: |
-        # Add your deployment commands here, for example:
-        aws s3 sync ./dist s3://your-bucket-name
-        # Or AWS Elastic Beanstalk/ECS/Lambda deployment
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: |
+          npm install -g yarn
+          yarn install
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: |
+          yarn install
+          yarn build
+
+      - name: Setup environment
+        working-directory: ./backend
+        run: |
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" > .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "PORT=${{ secrets.PORT }}" >> .env
+
+      - name: Deploy application
+        run: |
+          pm2 restart all

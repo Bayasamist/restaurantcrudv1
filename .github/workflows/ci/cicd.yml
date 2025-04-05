@@ -1,0 +1,95 @@
+name: Restaurant CRUD Deployment
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  NODE_VERSION: '20'
+  PROJECT_DIR: '/home/ubuntu/restaurantcrudv1'
+  APP_ENTRY: 'app.js'
+  EC2_IP: '3.107.53.25'  # Your EC2 instance IP
+  PORT: 3000
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      env:
+        CI: true
+        
+    - name: Run tests
+      run: |
+        echo "Running tests..."
+        npm test
+        echo "Tests completed successfully"
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        
+    - name: Install production dependencies
+      run: npm ci --production
+        
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.7.0
+      with:
+        ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+        
+    - name: Verify SSH connection
+      run: |
+        ssh -T -o StrictHostKeyChecking=no \
+            -i ${{ secrets.AWS_SSH_PRIVATE_KEY }} \
+            ubuntu@${{ env.EC2_IP }} "echo 'SSH connection successful'"
+            
+    - name: Deploy Application
+      run: |
+        set -ex
+        echo "🚀 Starting deployment to EC2 instance at ${{ env.EC2_IP }}"
+        
+        ssh -o StrictHostKeyChecking=no \
+            -i ${{ secrets.AWS_SSH_PRIVATE_KEY }} \
+            ubuntu@${{ env.EC2_IP }} << 'DEPLOY'
+        set -e
+        cd ${{ env.PROJECT_DIR }}
+        echo "🔄 Updating code from GitHub..."
+        git fetch origin main
+        git reset --hard origin/main
+        echo "📦 Installing dependencies..."
+        npm ci --production
+        echo "🔧 Setting up environment..."
+        [ -f .env ] || cp .env.example .env
+        echo "🔄 Restarting application..."
+        pm2 delete restaurant-crud || true
+        pm2 start ${{ env.APP_ENTRY }} --name "restaurant-crud"
+        pm2 save
+        echo "✅ Deployment completed successfully"
+        echo "🔄 Application status:"
+        pm2 list
+        DEPLOY
+        
+    - name: Verify deployment
+      run: |
+        echo "⏳ Waiting for application to start..."
+        sleep 15
+        echo "🔍 Checking application health..."
+        curl -sSf http://${{ env.EC2_IP }}:${{ env.PORT }}/api/restaurants || \
+        { echo "❌ Deployment verification failed"; exit 1; }
+        echo "✅ Application is running successfully!"

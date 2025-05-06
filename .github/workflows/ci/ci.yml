@@ -1,0 +1,76 @@
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - main  # Trigger self hosted runner
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: self-hosted
+
+    strategy:
+      matrix:
+        node-version: [22]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    # Setup Node.js
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    # Optional: Print env (debugging)
+    - name: Print Secrets (debug only)
+      env:
+        MONGO_URI: ${{ secrets.MONGO_URI }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        PORT: ${{ secrets.PORT }}
+      run: |
+        echo "🔒 MONGO_URI: $MONGO_URI"
+        echo "🔒 JWT_SECRET: $JWT_SECRET"
+        echo "🔒 PORT: $PORT"
+
+    # Stop PM2 safely
+    - name: Stop PM2 gracefully
+      run: pm2 stop all || true
+
+    # Install backend deps
+    - name: Install Backend Dependencies
+      working-directory: ./backend
+      run: |
+        npm install --global yarn
+        yarn install
+
+    # Install frontend deps & build
+    - name: Install Frontend & Build
+      working-directory: ./frontend
+      run: |
+        yarn install
+        yarn build
+
+    # Run Tests
+    - name: Run Backend Tests
+      working-directory: ./backend
+      env:
+        MONGO_URI: ${{ secrets.MONGO_URI }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        PORT: ${{ secrets.PORT }}
+      run: npm test
+
+    # Write .env for production
+    - name: Create .env file
+      working-directory: ./backend
+      run: |
+        echo "${{ secrets.PROD }}" > .env
+
+    # Start or restart PM2
+    - name: Start backend with PM2
+      working-directory: ./backend
+      run: |
+        pm2 start server.js --name charity-backend || pm2 restart charity-backend
+        pm2 save

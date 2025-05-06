@@ -41,7 +41,7 @@ const LoginForm = () => {
         {({ values, errors, touched, handleChange, handleSubmit, handleBlur }) => (
           <Form onFinish={handleSubmit} layout="vertical">
             <Form.Item
-              label="Email"
+              label="Username"
               validateStatus={touched.username && errors.username ? 'error' : ''}
               help={touched.username && errors.username}
             >
@@ -69,11 +69,11 @@ const LoginForm = () => {
             </Form.Item>
 
             <Button type="primary" htmlType="submit" block>
-              Нэвтрэх
+              Login
             </Button>
             <div className='h10'/>
             <Button onClick={onRegister} block>
-              Burtguuleh 
+              Register 
             </Button>
           </Form>
         )}

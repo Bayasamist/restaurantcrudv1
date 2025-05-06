@@ -1,5 +1,5 @@
-import { Button, Card, Col, Row, Typography } from "antd";
 import React, { memo } from "react";
+import { Button, Card, Col, Row } from "antd";
 import { useDispatch } from "react-redux";
 import { logout } from "../../store/auth-slice";
 import { useNavigate } from "react-router-dom";
@@ -11,8 +11,13 @@ const DashboardScreen = memo(() => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const logout = () => {
+  // ✅ Renamed to avoid conflict
+  const handleLogout = () => {
     dispatch(logout());
+
+    // Optional: clear token from localStorage if you use one
+    // localStorage.removeItem("token");
+
     navigate("/login");
   };
 
@@ -39,7 +44,7 @@ const DashboardScreen = memo(() => {
       <Header className="header">
         <h2 className="title">POS Dashboard</h2>
         <Button
-          onClick={logout}
+          onClick={handleLogout}
           type="primary"
           danger
           icon={<LogoutOutlined />}
@@ -52,12 +57,12 @@ const DashboardScreen = memo(() => {
               <Col key={item.name} xs={24} sm={12} md={8} lg={6}>
                 <Card
                   bordered={false}
-                  style={{ cursor: "pointer" }}
+                  style={{ cursor: "pointer", textAlign: "center" }}
                   onClick={() => {
                     navigate(item.route);
                   }}
                 >
-                  <img src={item.icon} className="icon" />
+                  <img src={item.icon} className="icon" alt={item.name} />
                   <h4>{item.name}</h4>
                 </Card>
               </Col>

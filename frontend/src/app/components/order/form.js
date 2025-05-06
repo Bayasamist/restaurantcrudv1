@@ -1,37 +1,49 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Form, Button, message, Select } from "antd";
-import { Formik } from "formik";
+import { Button, message, Select } from "antd";
+import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { MenuApi, TableApi } from "../../apis";
 
 const { Option } = Select;
 
 const validationSchema = Yup.object({
-  table: Yup.string().required("Require!"),
-  menu: Yup.string().required("Require!"),
-  status: Yup.string().required("Require!"),
+  table: Yup.string().required("Required!"),
+  menu: Yup.string().required("Required!"),
+  status: Yup.string().required("Required!"),
 });
 
 const STATUS = {
-    ORDERED : 'ordered',
-    COOKING: 'cooking',
-    READY :    'ready',
-    SERVED: 'served',
-    CANCELLED: 'cancelled'
-}
+  ORDERED: "ordered",
+  COOKING: "cooking",
+  READY: "ready",
+  SERVED: "served",
+  CANCELLED: "cancelled",
+};
 
 const OrderForm = ({ onCancel, action, onSubmit }) => {
   const [foodItems, setFoodItems] = useState([]);
   const [tableItems, setTableItems] = useState([]);
 
-  const [initialValues] = useState({
-    table: undefined,
-    menu: undefined,
-    status: undefined,
-    ...(action && action[0] === "edit" ? action[1] : {}),
+  const [initialValues] = useState(() => {
+    if (
+      action &&
+      Array.isArray(action) &&
+      action[0] === "edit" &&
+      typeof action[1] === "object"
+    ) {
+      return {
+        table: undefined,
+        menu: undefined,
+        status: undefined,
+        ...action[1],
+      };
+    }
+    return {
+      table: undefined,
+      menu: undefined,
+      status: undefined,
+    };
   });
-
-  console.log("initialValues :", initialValues);
 
   const fetchMenus = useCallback(async () => {
     try {
@@ -39,10 +51,10 @@ const OrderForm = ({ onCancel, action, onSubmit }) => {
         limit: 100,
         page: 1,
       });
-      setFoodItems(res.rows || []);
+      setFoodItems(res?.rows || []);
     } catch (error) {
       console.error("Error fetching menus:", error);
-      message.error("Failed to load menu items");
+      message.error(error?.message || "Failed to load menu items");
     }
   }, []);
 
@@ -52,10 +64,10 @@ const OrderForm = ({ onCancel, action, onSubmit }) => {
         limit: 100,
         page: 1,
       });
-      setTableItems(res.rows || []);
+      setTableItems(res?.rows || []);
     } catch (error) {
       console.error("Error fetching tables:", error);
-      message.error("Failed to load table items");
+      message.error(error?.message || "Failed to load table items");
     }
   }, []);
 
@@ -68,32 +80,29 @@ const OrderForm = ({ onCancel, action, onSubmit }) => {
     setFieldValue("menu", value);
   };
 
-
   const selectTable = (value, setFieldValue) => {
     setFieldValue("table", value);
   };
 
   const statusSelect = (value, setFieldValue) => {
     setFieldValue("status", value);
-  }
+  };
 
   return (
     <Formik
       initialValues={initialValues}
       validationSchema={validationSchema}
-      onSubmit={onSubmit} 
+      onSubmit={onSubmit}
       enableReinitialize
     >
       {({
         values,
         errors,
         touched,
-        handleChange,
-        handleBlur,
         setFieldValue,
-        handleSubmit
+        handleSubmit,
       }) => (
-        <div
+        <Form
           style={{
             maxWidth: 500,
             margin: "auto",
@@ -103,79 +112,80 @@ const OrderForm = ({ onCancel, action, onSubmit }) => {
           }}
         >
           <h2>Order Your Food</h2>
-          <Form layout="vertical">
-            <Form.Item
-              label="Select Table"
-              validateStatus={touched.table && errors.table ? "error" : ""}
-              help={touched.table && errors.table}
-            >
-              <Select
-                placeholder="Choose a table"
-                value={values.table}
-                onChange={(value) => selectTable(value, setFieldValue)}
-              >
-                {tableItems.length > 0 ? (
-                  tableItems.map((table) => (
-                    <Option key={table._id} value={table._id}>
-                      {`Table ${table.number}`}
-                    </Option>
-                  ))
-                ) : (
-                  <Option disabled>No tables</Option>
-                )}
-              </Select>
-            </Form.Item>
 
-            <Form.Item
-              label="Select Food Item"
-              validateStatus={touched.menu && errors.menu ? "error" : ""}
-              help={touched.menu && errors.menu}
+          <div className="form-group">
+            <label>Select Table</label>
+            <Select
+              placeholder="Choose a table"
+              value={values.table}
+              onChange={(value) => selectTable(value, setFieldValue)}
+              style={{ width: "100%" }}
             >
-              <Select
-                placeholder="Choose a food item"
-                value={values.menu}
-                onChange={(value) => selectMenu(value, setFieldValue)}
-              >
-                {foodItems.length > 0 ? (
-                  foodItems.map((menu) => (
-                    <Option key={menu._id} value={menu._id}>
-                      {menu.name}
-                    </Option>
-                  ))
-                ) : (
-                  <Option disabled>No food</Option>
-                )}
-              </Select>
-            </Form.Item>
-
-            <Form.Item
-              label="Selected status"
-              validateStatus={touched.status && errors.status ? "error" : ""}
-              help={touched.status && errors.status}
-            >
-              <Select
-                placeholder="Choose a selected status"
-                value={values.status}
-                name="status"
-                onChange={(value) => statusSelect(value, setFieldValue)}
-              >
-                {Object.keys(STATUS).map((status) => (
-                  <Option key={status} value={STATUS[status]}>
-                    {status}
+              {tableItems.length > 0 ? (
+                tableItems.map((table) => (
+                  <Option key={table._id} value={table._id}>
+                    {`Table ${table.number}`}
                   </Option>
-                ))}
-              </Select>
-            </Form.Item>
+                ))
+              ) : (
+                <Option disabled>No tables</Option>
+              )}
+            </Select>
+            {touched.table && errors.table && (
+              <div style={{ color: "red" }}>{errors.table}</div>
+            )}
+          </div>
 
-            <div className="modal-footer">
-              <Button onClick={onCancel}>Cancel</Button>
-              <div className="w10" />
-              <Button type="primary" htmlType="submit" onClick={handleSubmit}>
-                Ok
-              </Button>
-            </div>
-          </Form>
-        </div>
+          <div className="form-group" style={{ marginTop: 16 }}>
+            <label>Select Food Item</label>
+            <Select
+              placeholder="Choose a food item"
+              value={values.menu}
+              onChange={(value) => selectMenu(value, setFieldValue)}
+              style={{ width: "100%" }}
+            >
+              {foodItems.length > 0 ? (
+                foodItems.map((menu) => (
+                  <Option key={menu._id} value={menu._id}>
+                    {menu.name}
+                  </Option>
+                ))
+              ) : (
+                <Option disabled>No food</Option>
+              )}
+            </Select>
+            {touched.menu && errors.menu && (
+              <div style={{ color: "red" }}>{errors.menu}</div>
+            )}
+          </div>
+
+          <div className="form-group" style={{ marginTop: 16 }}>
+            <label>Select Status</label>
+            <Select
+              placeholder="Choose status"
+              value={values.status}
+              onChange={(value) => statusSelect(value, setFieldValue)}
+              style={{ width: "100%" }}
+            >
+              {Object.keys(STATUS).map((status) => (
+                <Option key={status} value={STATUS[status]}>
+                  {status}
+                </Option>
+              ))}
+            </Select>
+            {touched.status && errors.status && (
+              <div style={{ color: "red" }}>{errors.status}</div>
+            )}
+          </div>
+
+          <div className="modal-footer" style={{ marginTop: 24, textAlign: "right" }}>
+            <Button onClick={onCancel}>Cancel</Button>
+            <div style={{ width: 10, display: "inline-block" }} />
+            <Button type="primary" htmlType="submit">
+              Ok
+            </Button>
+          </div>
+        </Form>
       )}
     </Formik>
   );
